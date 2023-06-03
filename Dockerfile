@@ -31,7 +31,8 @@ WORKDIR /myapp
 
 COPY --from=deps /myapp/node_modules /myapp/node_modules
 
-ENV DATABASE_URL=file:./prisma/data.db
+ENV DATABASE_URL=file:./data.db
+# ENV DATABASE_URL=file:./prisma/data.db
 ADD prisma prisma
 RUN npx prisma generate
 RUN npx prisma migrate deploy
