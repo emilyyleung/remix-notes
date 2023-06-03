@@ -31,8 +31,10 @@ WORKDIR /myapp
 
 COPY --from=deps /myapp/node_modules /myapp/node_modules
 
-ADD prisma .
+ENV DATABASE_URL=file:./prisma/data.db
+ADD prisma prisma
 RUN npx prisma generate
+RUN npx prisma migrate deploy
 
 ADD . .
 RUN npm run build
@@ -40,9 +42,10 @@ RUN npm run build
 # Finally, build the production image with minimal footprint
 FROM base
 
-ENV DATABASE_URL=file:/data/sqlite.db
-ENV PORT="8080"
+ENV DATABASE_URL=file:./data.db
+ENV PORT="3000"
 ENV NODE_ENV="production"
+ENV SESSION_SECRET="helloworld"
 
 # add shortcut for connecting to database CLI
 # RUN echo "#!/bin/sh\nset -x\nsqlite3 \$DATABASE_URL" > /usr/local/bin/database-cli && chmod +x /usr/local/bin/database-cli
@@ -55,9 +58,7 @@ COPY --from=build /myapp/node_modules/.prisma /myapp/node_modules/.prisma
 COPY --from=build /myapp/build /myapp/build
 COPY --from=build /myapp/public /myapp/public
 COPY --from=build /myapp/package.json /myapp/package.json
-# COPY --from=build /myapp/start.sh /myapp/start.sh
 COPY --from=build /myapp/prisma /myapp/prisma
 
-# ENTRYPOINT [ "./start.sh" ]
-
+EXPOSE 3000
 CMD ["npm", "run", "start"]
